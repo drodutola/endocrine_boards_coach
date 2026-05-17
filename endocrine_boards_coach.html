@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Endocrine Boards Coach</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #ffffff;
+    --bg2: #f5f5f4;
+    --bg3: #eeece9;
+    --text: #1a1a18;
+    --text2: #6b6b67;
+    --border: rgba(0,0,0,0.12);
+    --border2: rgba(0,0,0,0.22);
+    --radius: 8px;
+    --radius-lg: 12px;
+    --green: #1D9E75;
+    --green-light: #E1F5EE;
+    --green-dark: #0F6E56;
+    --amber: #BA7517;
+    --red: #E24B4A;
+  }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg3); color: var(--text); min-height: 100vh; }
+  #root { max-width: 720px; margin: 0 auto; padding: 2rem 1rem; }
+  .header { display: flex; align-items: center; gap: 14px; margin-bottom: 1.75rem; padding-bottom: 1.25rem; border-bottom: 0.5px solid var(--border); }
+  .logo { width: 44px; height: 44px; border-radius: 50%; background: var(--green); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .logo svg { width: 22px; height: 22px; fill: white; }
+  .header h1 { font-size: 20px; font-weight: 600; color: var(--text); }
+  .header p { font-size: 13px; color: var(--text2); margin-top: 2px; }
+  .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 1.5rem; }
+  .stat-card { background: var(--bg); border-radius: var(--radius); padding: 14px; text-align: center; border: 0.5px solid var(--border); }
+  .stat-num { font-size: 26px; font-weight: 600; }
+  .stat-label { font-size: 12px; color: var(--text2); margin-top: 3px; }
+  .tabs { display: flex; gap: 4px; margin-bottom: 1.25rem; background: var(--bg2); border-radius: var(--radius); padding: 4px; border: 0.5px solid var(--border); }
+  .tab { flex: 1; padding: 9px 4px; font-size: 13px; font-weight: 400; color: var(--text2); background: transparent; border: none; border-radius: 6px; cursor: pointer; transition: all 0.15s; font-family: inherit; }
+  .tab.active { background: var(--bg); color: var(--text); font-weight: 600; border: 0.5px solid var(--border); }
+  .exam-bar { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 1.25rem; display: flex; align-items: center; justify-content: space-between; }
+  .exam-label { font-size: 12px; color: var(--text2); margin-bottom: 5px; }
+  .date-input { font-size: 13px; border: 0.5px solid var(--border2); border-radius: var(--radius); padding: 6px 10px; background: var(--bg); color: var(--text); font-family: inherit; outline: none; }
+  .date-input:focus { border-color: var(--green); }
+  .topic-card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 13px 15px; margin-bottom: 9px; }
+  .topic-header { display: flex; align-items: center; gap: 11px; cursor: pointer; user-select: none; }
+  .topic-icon { width: 34px; height: 34px; border-radius: var(--radius); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 16px; }
+  .topic-info { flex: 1; min-width: 0; }
+  .topic-name { font-size: 14px; font-weight: 600; }
+  .topic-sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .progress-col { width: 86px; flex-shrink: 0; }
+  .pbar-bg { height: 6px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
+  .pbar-fill { height: 100%; border-radius: 3px; transition: width 0.3s ease; }
+  .pbar-pct { font-size: 11px; color: var(--text2); text-align: right; margin-top: 3px; }
+  .subtopics { display: none; margin-top: 11px; padding-top: 11px; border-top: 0.5px solid var(--border); }
+  .subtopics.open { display: block; }
+  .sub-item { display: flex; align-items: center; gap: 9px; padding: 5px 2px; cursor: pointer; }
+  .sub-item input[type=checkbox] { width: 15px; height: 15px; accent-color: var(--green); cursor: pointer; flex-shrink: 0; }
+  .sub-label { font-size: 13px; }
+  .sub-label.done { color: var(--text2); text-decoration: line-through; }
+  .chat-wrap { display: flex; flex-direction: column; height: 460px; background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+  .chat-msgs { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 11px; }
+  .msg { display: flex; gap: 9px; }
+  .msg.user { flex-direction: row-reverse; }
+  .msg-avatar { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; flex-shrink: 0; margin-top: 2px; }
+  .msg.assistant .msg-avatar { background: var(--green-light); color: var(--green-dark); }
+  .msg.user .msg-avatar { background: var(--green-dark); color: white; }
+  .msg-bubble { max-width: 78%; padding: 10px 13px; border-radius: var(--radius-lg); font-size: 13.5px; line-height: 1.55; }
+  .msg.assistant .msg-bubble { background: var(--bg2); color: var(--text); border-bottom-left-radius: 4px; }
+  .msg.user .msg-bubble { background: var(--green); color: white; border-bottom-right-radius: 4px; }
+  .chat-footer { border-top: 0.5px solid var(--border); padding: 11px 13px; display: flex; gap: 9px; }
+  .chat-input { flex: 1; padding: 9px 13px; font-size: 13.5px; border: 0.5px solid var(--border2); border-radius: var(--radius); background: var(--bg2); color: var(--text); outline: none; font-family: inherit; }
+  .chat-input:focus { border-color: var(--green); }
+  .send-btn { padding: 9px 16px; background: var(--green); color: white; border: none; border-radius: var(--radius); cursor: pointer; font-size: 13px; font-weight: 600; font-family: inherit; }
+  .send-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .quick-row { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 11px; }
+  .qp { font-size: 12px; padding: 5px 11px; background: var(--bg); border: 0.5px solid var(--border2); border-radius: 20px; cursor: pointer; color: var(--text2); font-family: inherit; transition: all 0.15s; }
+  .qp:hover { background: var(--bg2); color: var(--text); }
+  .plan-card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+  .plan-head { padding: 13px 15px; border-bottom: 0.5px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .plan-title { font-size: 14px; font-weight: 600; }
+  .gen-btn { padding: 7px 14px; background: var(--green); color: white; border: none; border-radius: var(--radius); cursor: pointer; font-size: 12px; font-weight: 600; font-family: inherit; }
+  .gen-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .plan-body { padding: 15px; min-height: 220px; }
+  .plan-week { margin-bottom: 15px; }
+  .week-title { font-size: 13px; font-weight: 600; padding: 4px 9px; background: var(--bg2); border-radius: var(--radius); margin-bottom: 7px; }
+  .plan-day { display: flex; gap: 11px; padding: 5px 9px; font-size: 13px; border-bottom: 0.5px solid var(--border); }
+  .plan-day:last-child { border-bottom: none; }
+  .day-lbl { color: var(--text2); width: 32px; flex-shrink: 0; }
+  .day-focus { color: var(--text); flex: 1; }
+  .empty-state { text-align: center; padding: 2.5rem 0; color: var(--text2); font-size: 13px; }
+  .empty-state .icon { font-size: 36px; margin-bottom: 10px; }
+  .dots { display: inline-flex; gap: 4px; align-items: center; }
+  .dots span { width: 5px; height: 5px; border-radius: 50%; background: var(--text2); animation: pulse 1.2s infinite; }
+  .dots span:nth-child(2) { animation-delay: 0.2s; }
+  .dots span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes pulse { 0%,80%,100%{transform:scale(0.55);opacity:0.35} 40%{transform:scale(1);opacity:1} }
+
+  /* API Key Banner */
+  .api-banner { background: #fff8e6; border: 0.5px solid #BA7517; border-radius: var(--radius); padding: 10px 14px; margin-bottom: 1.25rem; font-size: 13px; color: #854F0B; display: flex; align-items: center; gap: 10px; }
+  .api-banner input { flex: 1; padding: 6px 10px; border: 0.5px solid #BA7517; border-radius: var(--radius); font-size: 13px; font-family: monospace; background: white; outline: none; }
+  .api-banner button { padding: 6px 12px; background: #BA7517; color: white; border: none; border-radius: var(--radius); cursor: pointer; font-size: 12px; font-weight: 600; font-family: inherit; white-space: nowrap; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useRef, useEffect } = React;
+
+const TOPICS = [
+  { id: 'diabetes', name: 'Diabetes Mellitus', icon: '🩸', bg: '#E1F5EE',
+    subtopics: ['Type 1 DM pathophysiology','Type 2 DM management','Insulin pharmacology','Diabetic ketoacidosis','HHS','Chronic complications','Gestational diabetes','MODY','Monogenic diabetes'] },
+  { id: 'thyroid', name: 'Thyroid Disorders', icon: '🦋', bg: '#E6F1FB',
+    subtopics: ["Hypothyroidism","Hyperthyroidism & Graves'","Thyroid nodule workup","Thyroid cancer","Thyroiditis","Amiodarone-induced thyroid disease","Thyroid in pregnancy"] },
+  { id: 'adrenal', name: 'Adrenal Gland', icon: '🔺', bg: '#FAECE7',
+    subtopics: ["Cushing's syndrome","Addison's disease","Pheochromocytoma","Primary aldosteronism","Adrenal incidentaloma","Congenital adrenal hyperplasia","Adrenal insufficiency in ICU"] },
+  { id: 'pituitary', name: 'Pituitary & Hypothalamus', icon: '🧠', bg: '#EEEDFE',
+    subtopics: ["Hypopituitarism","Prolactinoma","Acromegaly","Cushing's disease","Craniopharyngioma","Diabetes insipidus","SIADH","Empty sella syndrome"] },
+  { id: 'calcium', name: 'Calcium & Bone', icon: '🦴', bg: '#EAF3DE',
+    subtopics: ["Primary hyperparathyroidism","Hypoparathyroidism","Osteoporosis","Paget's disease","Vitamin D deficiency","Hypercalcemia of malignancy","Osteomalacia"] },
+  { id: 'repro', name: 'Reproductive Endocrinology', icon: '⚕️', bg: '#FBEAF0',
+    subtopics: ["PCOS","Male hypogonadism","Female hypogonadism","Menopause management","Infertility workup","Transgender endocrinology","Puberty disorders"] },
+  { id: 'lipids', name: 'Lipids & Obesity', icon: '💊', bg: '#FAEEDA',
+    subtopics: ["Dyslipidemia management","Familial hypercholesterolemia","Obesity pharmacotherapy","Bariatric surgery","Metabolic syndrome"] },
+  { id: 'net', name: 'Neuroendocrine Tumors', icon: '🔬', bg: '#E6F1FB',
+    subtopics: ["Carcinoid tumors","Insulinoma","Gastrinoma","MEN syndromes","VIPoma","Glucagonoma"] },
+];
+
+const QUICK_PROMPTS = [
+  "Quiz me on thyroid disorders",
+  "Highest-yield adrenal topics?",
+  "Build today's study schedule",
+  "I'm burned out — motivate me",
+  "Explain the ACTH stimulation test",
+  "What does the ABIM test on for diabetes?",
+];
+
+function App() {
+  const [tab, setTab] = useState('topics');
+  const [checked, setChecked] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('endo_checked') || '{}'); } catch { return {}; }
+  });
+  const [expanded, setExpanded] = useState({});
+  const [messages, setMessages] = useState([
+    { role: 'assistant', content: "Hi! I'm your endocrine boards coach. I can quiz you with clinical vignettes, explain concepts, build your daily schedule, or keep you accountable. What do you need today?" }
+  ]);
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [examDate, setExamDate] = useState(() => localStorage.getItem('endo_examdate') || '');
+  const [plan, setPlan] = useState(null);
+  const [planLoading, setPlanLoading] = useState(false);
+  const [apiKey, setApiKey] = useState(() => localStorage.getItem('endo_apikey') || '');
+  const [apiKeyInput, setApiKeyInput] = useState('');
+  const chatEndRef = useRef(null);
+
+  useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, loading]);
+  useEffect(() => { localStorage.setItem('endo_checked', JSON.stringify(checked)); }, [checked]);
+  useEffect(() => { localStorage.setItem('endo_examdate', examDate); }, [examDate]);
+
+  const toggleCheck = (id, i) => setChecked(p => ({ ...p, [`${id}_${i}`]: !p[`${id}_${i}`] }));
+  const getProgress = (t) => {
+    const done = t.subtopics.filter((_, i) => checked[`${t.id}_${i}`]).length;
+    return { done, total: t.subtopics.length, pct: Math.round(done / t.subtopics.length * 100) };
+  };
+  const totalDone = TOPICS.reduce((a, t) => a + t.subtopics.filter((_, i) => checked[`${t.id}_${i}`]).length, 0);
+  const totalItems = TOPICS.reduce((a, t) => a + t.subtopics.length, 0);
+  const overallPct = Math.round(totalDone / totalItems * 100);
+  const daysLeft = examDate ? Math.max(0, Math.ceil((new Date(examDate) - new Date()) / 86400000)) : null;
+  const pColor = (p) => p >= 70 ? '#1D9E75' : p >= 40 ? '#BA7517' : '#E24B4A';
+
+  const sysPrompt = () => {
+    const prog = TOPICS.map(t => { const { done, total } = getProgress(t); return `${t.name}: ${done}/${total}`; }).join(', ');
+    return `You are an expert endocrine boards study coach helping a physician fellow prepare for their endocrinology board examination (ABIM Endocrinology, Diabetes & Metabolism). You have deep knowledge of all boards topics.\n\nFellow's current progress: ${prog}. Overall: ${overallPct}% complete.${daysLeft !== null ? ` Exam in ${daysLeft} days.` : ''}\n\nYour role: quiz with clinical vignettes, explain pathophysiology clearly, reference ADA/ATA/ES/AACE/ABIM guidelines, provide accountability, flag high-yield topics, keep motivation high. Be concise but thorough.`;
+  };
+
+  const send = async (text) => {
+    if (!text.trim() || loading) return;
+    if (!apiKey) { alert('Please enter your Anthropic API key first.'); return; }
+    const msgs = [...messages, { role: 'user', content: text }];
+    setMessages(msgs); setInput(''); setLoading(true);
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+        body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1000, system: sysPrompt(), messages: msgs.map(m => ({ role: m.role, content: m.content })) })
+      });
+      const d = await res.json();
+      if (d.error) throw new Error(d.error.message);
+      setMessages(p => [...p, { role: 'assistant', content: d.content?.[0]?.text || 'Try again.' }]);
+    } catch (e) {
+      setMessages(p => [...p, { role: 'assistant', content: `Error: ${e.message}` }]);
+    }
+    setLoading(false);
+  };
+
+  const genPlan = async () => {
+    if (!apiKey) { alert('Please enter your Anthropic API key first.'); return; }
+    setPlanLoading(true);
+    const weak = TOPICS.filter(t => getProgress(t).pct < 50).map(t => t.name);
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514', max_tokens: 1000,
+          messages: [{ role: 'user', content: `Create a 2-week endocrine boards study plan. Weak topics needing focus: ${weak.join(', ') || 'none identified yet'}.${daysLeft !== null ? ` Exam in ${daysLeft} days.` : ''} Respond ONLY with raw JSON, no markdown fences. Format exactly: {"weeks":[{"title":"Week 1","days":[{"day":"Mon","focus":"brief topic description under 10 words"},...]},{"title":"Week 2","days":[...]}]}` }]
+        })
+      });
+      const d = await res.json();
+      if (d.error) throw new Error(d.error.message);
+      const txt = d.content?.[0]?.text || '{}';
+      setPlan(JSON.parse(txt.replace(/```json|```/g, '').trim()));
+    } catch (e) { alert('Plan generation failed: ' + e.message); }
+    setPlanLoading(false);
+  };
+
+  const saveKey = () => {
+    setApiKey(apiKeyInput);
+    localStorage.setItem('endo_apikey', apiKeyInput);
+    setApiKeyInput('');
+  };
+
+  return (
+    <div>
+      <div className="header">
+        <div className="logo">
+          <svg viewBox="0 0 24 24"><path d="M12 2C8.5 2 6 4.5 6 7c0 1.5.6 2.8 1.5 3.8C5.5 12 4 14 4 16.5 4 19.5 6.5 22 10 22h4c3.5 0 6-2.5 6-5.5 0-2.5-1.5-4.5-3.5-5.7C17.4 9.8 18 8.5 18 7c0-2.5-2.5-5-6-5z"/></svg>
+        </div>
+        <div>
+          <h1>Endocrine Boards Coach</h1>
+          <p>AI-powered study accountability & exam prep</p>
+        </div>
+      </div>
+
+      {!apiKey && (
+        <div className="api-banner">
+          <span>🔑 Enter your Anthropic API key to enable the AI coach:</span>
+          <input type="password" value={apiKeyInput} onChange={e => setApiKeyInput(e.target.value)} placeholder="sk-ant-..." onKeyDown={e => e.key === 'Enter' && saveKey()} />
+          <button onClick={saveKey}>Save</button>
+        </div>
+      )}
+      {apiKey && (
+        <div style={{fontSize:12, color:'#1D9E75', marginBottom:'1rem', display:'flex', alignItems:'center', gap:8}}>
+          ✓ API key saved &nbsp;
+          <span style={{cursor:'pointer', color:'#BA7517', textDecoration:'underline'}} onClick={() => { setApiKey(''); localStorage.removeItem('endo_apikey'); }}>Change key</span>
+        </div>
+      )}
+
+      <div className="stats-grid">
+        <div className="stat-card"><div className="stat-num" style={{color:pColor(overallPct)}}>{overallPct}%</div><div className="stat-label">Overall progress</div></div>
+        <div className="stat-card"><div className="stat-num">{totalDone}<span style={{fontSize:15,color:'#6b6b67'}}>/{totalItems}</span></div><div className="stat-label">Subtopics done</div></div>
+        <div className="stat-card"><div className="stat-num" style={{color:daysLeft!==null&&daysLeft<30?'#E24B4A':'#1a1a18'}}>{daysLeft!==null?daysLeft:'—'}</div><div className="stat-label">Days to exam</div></div>
+      </div>
+
+      <div className="tabs">
+        {[['topics','📋  Topics'],['coach','🤖  AI Coach'],['plan','📅  Study Plan']].map(([id,label])=>(
+          <button key={id} className={`tab ${tab===id?'active':''}`} onClick={()=>setTab(id)}>{label}</button>
+        ))}
+      </div>
+
+      {tab === 'topics' && (
+        <div>
+          <div className="exam-bar">
+            <div>
+              <div className="exam-label">Exam date</div>
+              <input type="date" className="date-input" value={examDate} onChange={e=>setExamDate(e.target.value)}/>
+            </div>
+            <div style={{textAlign:'right'}}>
+              <div style={{fontSize:24,fontWeight:700,color:'#1D9E75'}}>{TOPICS.filter(t=>getProgress(t).pct===100).length}/{TOPICS.length}</div>
+              <div className="exam-label">Categories complete</div>
+            </div>
+          </div>
+          {TOPICS.map(t => {
+            const {done,total,pct} = getProgress(t);
+            return (
+              <div className="topic-card" key={t.id}>
+                <div className="topic-header" onClick={()=>setExpanded(p=>({...p,[t.id]:!p[t.id]}))}>
+                  <div className="topic-icon" style={{background:t.bg}}>{t.icon}</div>
+                  <div className="topic-info">
+                    <div className="topic-name">{t.name}</div>
+                    <div className="topic-sub">{done}/{total} subtopics · click to {expanded[t.id]?'collapse':'expand'}</div>
+                  </div>
+                  <div className="progress-col">
+                    <div className="pbar-bg"><div className="pbar-fill" style={{width:`${pct}%`,background:pColor(pct)}}></div></div>
+                    <div className="pbar-pct">{pct}%</div>
+                  </div>
+                </div>
+                <div className={`subtopics ${expanded[t.id]?'open':''}`}>
+                  {t.subtopics.map((sub,i)=>(
+                    <div className="sub-item" key={i} onClick={()=>toggleCheck(t.id,i)}>
+                      <input type="checkbox" checked={!!checked[`${t.id}_${i}`]} onChange={()=>{}}/>
+                      <span className={`sub-label ${checked[`${t.id}_${i}`]?'done':''}`}>{sub}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {tab === 'coach' && (
+        <div>
+          <div className="quick-row">
+            {QUICK_PROMPTS.map((p,i)=><button key={i} className="qp" onClick={()=>send(p)}>{p}</button>)}
+          </div>
+          <div className="chat-wrap">
+            <div className="chat-msgs">
+              {messages.map((m,i)=>(
+                <div key={i} className={`msg ${m.role}`}>
+                  <div className="msg-avatar">{m.role==='assistant'?'Rx':'Me'}</div>
+                  <div className="msg-bubble" style={{whiteSpace:'pre-wrap'}}>{m.content}</div>
+                </div>
+              ))}
+              {loading&&(
+                <div className="msg assistant">
+                  <div className="msg-avatar">Rx</div>
+                  <div className="msg-bubble"><div className="dots"><span/><span/><span/></div></div>
+                </div>
+              )}
+              <div ref={chatEndRef}/>
+            </div>
+            <div className="chat-footer">
+              <input className="chat-input" value={input} onChange={e=>setInput(e.target.value)}
+                onKeyDown={e=>e.key==='Enter'&&!e.shiftKey&&send(input)}
+                placeholder="Ask a question, request a quiz, or check in..."/>
+              <button className="send-btn" onClick={()=>send(input)} disabled={loading||!input.trim()}>Send</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {tab === 'plan' && (
+        <div>
+          <div className="plan-card">
+            <div className="plan-head">
+              <div className="plan-title">Personalized 2-week study plan</div>
+              <button className="gen-btn" onClick={genPlan} disabled={planLoading}>
+                {planLoading ? 'Generating...' : plan ? '↻ Regenerate' : '✦ Generate AI plan'}
+              </button>
+            </div>
+            <div className="plan-body">
+              {!plan && !planLoading && (
+                <div className="empty-state">
+                  <div className="icon">📋</div>
+                  Click "Generate AI plan" to create a personalized schedule<br/>weighted toward your weakest areas.
+                </div>
+              )}
+              {planLoading && (
+                <div className="empty-state">
+                  <div className="dots" style={{justifyContent:'center',marginBottom:10}}><span/><span/><span/></div>
+                  Building your personalized schedule...
+                </div>
+              )}
+              {plan && plan.weeks && plan.weeks.map((w,wi)=>(
+                <div className="plan-week" key={wi}>
+                  <div className="week-title">{w.title}</div>
+                  {w.days && w.days.map((d,di)=>(
+                    <div className="plan-day" key={di}>
+                      <div className="day-lbl">{d.day}</div>
+                      <div className="day-focus">{d.focus}</div>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+          <p style={{marginTop:10,fontSize:12,color:'#6b6b67',textAlign:'center'}}>
+            Progress and exam date are saved automatically. Regenerate anytime as you advance.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+ReactDOM.render(<App/>, document.getElementById('root'));
+</script>
+</body>
+</html>
